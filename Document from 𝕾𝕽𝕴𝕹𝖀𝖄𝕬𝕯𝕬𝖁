@@ -1,0 +1,166 @@
+import java.util.*;
+
+class Student {
+    private int id;
+    private String name;
+    private String rollNumber;
+
+    public Student(int id, String name, String rollNumber) {
+        this.id = id;
+        this.name = name;
+        this.rollNumber = rollNumber;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getRollNumber() {
+        return rollNumber;
+    }
+
+    @Override
+    public String toString() {
+        return "ID: " + id + ", Name: " + name + ", Roll No: " + rollNumber;
+    }
+}
+
+class Attendance {
+    private Student student;
+    private String date;
+    private String status; // "Present" or "Absent"
+
+    public Attendance(Student student, String date, String status) {
+        this.student = student;
+        this.date = date;
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return student.getName() + " (" + student.getRollNumber() + ") - " + date + ": " + status;
+    }
+}
+
+class StudentNotFoundException extends Exception {
+    public StudentNotFoundException(String message) {
+        super(message);
+    }
+}
+
+public class AttendanceManagementSystem {
+    private static List<Student> students = new ArrayList<>();
+    private static List<Attendance> attendanceRecords = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        while (true) {
+            try {
+                System.out.println("\n--- Attendance Management System ---");
+                System.out.println("1. Add Student");
+                System.out.println("2. Mark Attendance");
+                System.out.println("3. View Attendance Records");
+                System.out.println("4. Exit");
+                System.out.print("Choose an option: ");
+                
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                
+                switch (choice) {
+                    case 1:
+                        addStudent();
+                        break;
+                    case 2:
+                        markAttendance();
+                        break;
+                    case 3:
+                        viewAttendanceRecords();
+                        break;
+                    case 4:
+                        System.out.println("Exiting...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input! Please enter a number between 1-4.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    private static void addStudent() {
+        try {
+            System.out.print("Enter Student Name: ");
+            String name = scanner.nextLine();
+            if (name.isEmpty()) throw new IllegalArgumentException("Name cannot be empty.");
+
+            System.out.print("Enter Roll Number: ");
+            String rollNumber = scanner.nextLine();
+            if (rollNumber.isEmpty()) throw new IllegalArgumentException("Roll Number cannot be empty.");
+
+            int id = students.size() + 1;
+            students.add(new Student(id, name, rollNumber));
+            System.out.println("Student added successfully!");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void markAttendance() {
+        try {
+            if (students.isEmpty()) {
+                System.out.println("No students available. Add students first.");
+                return;
+            }
+
+            System.out.println("Select Student:");
+            for (Student student : students) {
+                System.out.println(student.getId() + ". " + student.getName() + " (" + student.getRollNumber() + ")");
+            }
+
+            System.out.print("Enter Student ID: ");
+            int studentId = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            Student student = students.stream()
+                                      .filter(s -> s.getId() == studentId)
+                                      .findFirst()
+                                      .orElseThrow(() -> new StudentNotFoundException("Invalid student ID."));
+
+            System.out.print("Enter Date (YYYY-MM-DD): ");
+            String date = scanner.nextLine();
+            if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) throw new IllegalArgumentException("Invalid date format!");
+
+            System.out.print("Enter Status (Present/Absent): ");
+            String status = scanner.nextLine();
+            if (!status.equalsIgnoreCase("Present") && !status.equalsIgnoreCase("Absent")) {
+                throw new IllegalArgumentException("Invalid status! Enter 'Present' or 'Absent'.");
+            }
+
+            attendanceRecords.add(new Attendance(student, date, status));
+            System.out.println("Attendance marked successfully!");
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input! Please enter a valid number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (StudentNotFoundException | IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void viewAttendanceRecords() {
+        if (attendanceRecords.isEmpty()) {
+            System.out.println("No attendance records available.");
+            return;
+        }
+
+        System.out.println("\n--- Attendance Records ---");
+        for (Attendance record : attendanceRecords) {
+            System.out.println(record);
+        }
+    }
+}
